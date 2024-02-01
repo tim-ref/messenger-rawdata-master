@@ -1,0 +1,102 @@
+# Copyright (C) 2023 akquinet GmbH
+#
+# Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0 Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
+
+
+#==========================================================
+# Rohdaten und Rohdaten-Berichte
+#==========================================================
+
+### Rohdaten hinzufügen
+
+POST http://localhost:9020/add-performance-data
+Content-Type: application/json
+
+{
+  "start": "2018-04-09T08:59:52Z",
+  "durationInMs": 100,
+  "status": "200",
+  "operation": "RS_LOGIN",
+  "message": "{\"key\" : \"value\"}"
+}
+
+### ADMIN: Rohdaten aus der DB auslesen
+# optionale Angabe von Request-Parametern "from" und "to" (Instant)
+
+GET http://localhost:9021/admin/raw-data?from=2018-04-09T08:59:00Z
+Authorization: Basic admin secret
+
+### ADMIN: Rohdaten-Berichte aus der DB auslesen
+# optionale Angabe von Request-Parametern "from" und "to" (Instant)
+
+GET http://localhost:9021/admin/reports?from=2018-04-09T08:59:00Z
+Authorization: Basic admin secret
+
+### ADMIN: Rohdaten-Berichte aus der DB löschen
+# VERPFLICHTENDE Angabe von Request-Parametern "from" und "to" (Instant)
+
+DELETE http://localhost:9021/admin/reports?from=2018-04-09T08:00:00Z&to=2018-04-09T10:00:00Z
+Authorization: Basic admin secret
+
+#==========================================================
+# Nachlieferung
+#==========================================================
+
+### ADMIN: Nachlieferung starten
+# Die Rohdaten-Berichte werden alle 5 Minuten (default),
+# Rohdaten dieser Dauer umfassend, an den gematik-Endpunkt gesendet.
+#
+# Nicht-zugestellte Berichte (gematik down oder Service down)
+# können unter diesem Endpunkt wieder angefordert werden.
+#
+# Die eingereihten Nachlieferungen werden alle 5 Minuten (wie oben, default)
+# versetzt um die halbe Periodenlänge (hier 2.5 Minuten) einzeln
+# an den gematik-Endpunkt gesendet.
+#
+# Request-Parameter: from (Instant), to (Instant), periodMinutes (Int)
+
+POST http://localhost:9021/admin/supplement?from=2018-04-09T08:59:00Z&to=2018-04-09T09:09:00Z&periodMinutes=5
+Authorization: Basic admin secret
+
+### ADMIN: Nachlieferung: Länge der Warteschlange
+
+GET http://localhost:9021/admin/supplement/queue
+Authorization: Basic admin secret
+
+### ADMIN: Nachlieferung: Warteschlange leeren
+# Eine neue Nachlieferung kann nur dann gestartet werden,
+# wenn die aktuelle Warteschlange leer ist.
+# (Dies verhindert u.a. ein versehentliches Überschreiben der Warteschlange.)
+
+DELETE http://localhost:9021/admin/supplement/queue
+Authorization: Basic admin secret
+
+#==========================================================
+# Bestandsdaten
+#==========================================================
+
+### Bestandsdaten hinzufügen
+
+POST http://localhost:9020/add-statistics-data
+Content-Type: application/json
+
+{
+  "messengerServices": 12,
+  "registeredUsers": 3456,
+  "activeUsers": 789
+}
+
+### ADMIN: Bestandsdaten senden
+# werden 1x monatlich (default) an den gematik-Endpunkt gesendet
+
+POST http://localhost:9021/admin/statistics
+Authorization: Basic admin secret
+
+#==========================================================
+# Selbstauskunft
+#==========================================================
+
+### Selbstauskunft abfragen
+# wird 1x stündlich (default) an den gematik-Endpunkt gesendet
+
+GET http://localhost:9020/self-disclosure

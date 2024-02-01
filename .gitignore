@@ -1,0 +1,22 @@
+rdm-backend/HELP.md
+target/
+!.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**
+!**/src/test/**
+### IntelliJ IDEA ###
+.idea
+.idea/*
+**/*.iws
+**/*.iml
+**/*.ipr
+**/*.log.gz
+persistence-units.xml
+
+kubernetes/generated
+kubernetes/**/*.pem
+*-plain-secret.yaml
+/.idea/
+.idea/
+
+### Environment variables ###
+**/.envrc

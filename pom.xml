@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Copyright (C) 2023 akquinet GmbH
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0 Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
+  -->
+
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>de.akquinet.timref.fachdienst.rawdata-master</groupId>
+    <artifactId>rdm-parent</artifactId>
+    <version>0.3.13-SNAPSHOT</version>
+    <packaging>pom</packaging>
+
+    <name>Rawdata Master - Parent</name>
+    <description>Rawdata Master für die TIM Referenzimplementierung</description>
+
+    <modules>
+        <module>rdm-backend</module>
+        <module>rdm-upload-mock</module>
+    </modules>
+
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+
+        <java.version>17</java.version>
+        <maven.compiler.source>${java.version}</maven.compiler.source>
+        <maven.compiler.target>${java.version}</maven.compiler.target>
+
+        <kotlin.version>1.9.22</kotlin.version>
+
+        <spring-boot.version>3.2.2</spring-boot.version>
+
+        <spring-boot.classifier>standalone</spring-boot.classifier>
+    </properties>
+
+    <dependencyManagement>
+        <dependencies>
+            <!-- rdm modules -->
+            <dependency>
+                <groupId>de.akquinet.timref.fachdienst.rawdata-master</groupId>
+                <artifactId>rdm-backend</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>de.akquinet.timref.fachdienst.rawdata-master</groupId>
+                <artifactId>rdm-upload-mock</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <!-- Import dependency management from Spring Boot -->
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-dependencies</artifactId>
+                <version>${spring-boot.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.springframework.boot</groupId>
+                    <artifactId>spring-boot-maven-plugin</artifactId>
+                    <version>${spring-boot.version}</version>
+                    <configuration>
+                        <classifier>${spring-boot.classifier}</classifier>
+                    </configuration>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-clean-plugin</artifactId>
+                    <version>3.3.2</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-compiler-plugin</artifactId>
+                    <version>3.12.1</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-dependency-plugin</artifactId>
+                    <version>3.6.1</version>
+                    <configuration>
+                        <artifactItems>
+                            <artifactItem>
+                                <groupId>${project.groupId}</groupId>
+                                <artifactId>${project.artifactId}</artifactId>
+                                <classifier>${spring-boot.classifier}</classifier>
+                            </artifactItem>
+                        </artifactItems>
+                        <outputDirectory>${project.build.directory}/app</outputDirectory>
+                    </configuration>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-resources-plugin</artifactId>
+                    <version>3.3.1</version>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+
+        <plugins>
+            <!-- maven-release-plugin -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-release-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
+
+    <profiles>
+        <profile>
+            <id>local</id>
+            <properties>
+                <activeProfile>local</activeProfile>
+            </properties>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+        </profile>
+        <profile>
+            <id>local-docker</id>
+            <properties>
+                <activeProfile>local-docker</activeProfile>
+            </properties>
+        </profile>
+        <profile>
+            <id>kubernetes</id>
+            <properties>
+                <activeProfile>kubernetes</activeProfile>
+            </properties>
+        </profile>
+    </profiles>
+
+    <repositories>
+        <repository>
+            <id>timref-maven</id>
+            <url>${env.CI_PACKAGE_REGISTRY_URL}</url>
+        </repository>
+    </repositories>
+
+    <distributionManagement>
+        <repository>
+            <id>timref-maven</id>
+            <url>${env.CI_PACKAGE_REGISTRY_URL}</url>
+        </repository>
+        <snapshotRepository>
+            <id>timref-maven</id>
+            <url>${env.CI_PACKAGE_REGISTRY_URL}</url>
+        </snapshotRepository>
+    </distributionManagement>
+
+    <scm>
+        <connection>${env.CI_SCM_CONNECTION}</connection>
+        <developerConnection>${env.CI_SCM_DEVELOPER_CONNECTION}</developerConnection>
+        <tag>HEAD</tag>
+        <url>${env.CI_SCM_URL}</url>
+    </scm>
+
+</project>

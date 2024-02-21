@@ -47,7 +47,10 @@ import javax.sql.DataSource
 
 @SpringBootTest(
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
-    properties = ["rawdata-master.rawDataReport.autoSupplementOnStart=false"]
+    properties = [
+        "rawdata-master.rawDataReport.autoSupplementOnStart=false",
+        "rawdata-master.rawDataReport.deliveryRateMinutes=0"
+    ]
 )
 @RunWith(SpringRunner::class)
 @AutoConfigureEmbeddedDatabase

@@ -11,12 +11,12 @@
     <parent>
         <groupId>de.akquinet.timref.fachdienst.rawdata-master</groupId>
         <artifactId>rdm-parent</artifactId>
-        <version>0.3.13-SNAPSHOT</version>
+        <version>0.3.14</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
     <artifactId>rdm-upload-mock</artifactId>
-    <version>0.3.13-SNAPSHOT</version>
+    <version>0.3.14</version>
     <name>Rawdata Master - Upload Mock</name>
     <description>Upload Mock für den Rawdata Master der TIM-Referenzimplementierung</description>
 
@@ -64,6 +64,18 @@
                         <goals>
                             <goal>repackage</goal>
                         </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- maven-assembly-plugin -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>assemble</id>
+                        <phase />
                     </execution>
                 </executions>
             </plugin>

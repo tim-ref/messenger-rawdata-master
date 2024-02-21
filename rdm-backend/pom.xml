@@ -11,12 +11,12 @@
     <parent>
         <groupId>de.akquinet.timref.fachdienst.rawdata-master</groupId>
         <artifactId>rdm-parent</artifactId>
-        <version>0.3.13-SNAPSHOT</version>
+        <version>0.3.14</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
     <artifactId>rdm-backend</artifactId>
-    <version>0.3.13-SNAPSHOT</version>
+    <version>0.3.14</version>
     <name>Rawdata Master - Backend</name>
     <description>Backend für den Rawdata Master der TIM-Referenzimplementierung</description>
 
@@ -35,7 +35,7 @@
         <dependency>
             <groupId>org.apache.httpcomponents.client5</groupId>
             <artifactId>httpclient5</artifactId>
-            <version>5.2.1</version>
+            <version>5.3.1</version>
         </dependency>
 
         <dependency>
@@ -149,7 +149,7 @@
         <dependency>
             <groupId>io.zonky.test.postgres</groupId>
             <artifactId>embedded-postgres-binaries-linux-amd64</artifactId>
-            <version>16.1.1</version>
+            <version>16.2.0</version>
             <scope>test</scope>
         </dependency>
 
@@ -225,12 +225,23 @@
         <dependency>
             <groupId>org.jetbrains.kotlinx</groupId>
             <artifactId>kotlinx-serialization-json</artifactId>
-            <version>1.6.2</version>
+            <version>1.6.3</version>
         </dependency>
 
     </dependencies>
 
     <build>
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>false</filtering>
+            </resource>
+            <resource>
+                <directory>src/main/resources-filtered</directory>
+                <filtering>true</filtering>
+            </resource>
+        </resources>
+
         <plugins>
             <!-- kotlin-maven-plugin -->
             <plugin>
@@ -468,6 +479,18 @@
                 </executions>
             </plugin>
 
+            <!-- maven-assembly-plugin -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>assemble</id>
+                        <phase />
+                    </execution>
+                </executions>
+            </plugin>
+
             <!-- sonar-maven-plugin -->
             <plugin>
                 <groupId>org.sonarsource.scanner.maven</groupId>
@@ -479,7 +502,7 @@
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>license-maven-plugin</artifactId>
-                <version>2.3.0</version>
+                <version>2.4.0</version>
             </plugin>
         </plugins>
     </build>

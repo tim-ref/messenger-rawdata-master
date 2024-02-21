@@ -12,8 +12,6 @@ spring:
 
   flyway:
     locations: classpath:/db/migration
-    clean-on-validation-error: ${RAWDATA_MASTER_CLEAN_ON_ERROR}
-    baseline-on-migrate: true # Makes already migrated versions new base on migrate, allowing incremental migration
 
 rawdata-master:
   api:

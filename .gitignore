@@ -20,3 +20,5 @@ kubernetes/**/*.pem
 
 ### Environment variables ###
 **/.envrc
+
+.DS_Store

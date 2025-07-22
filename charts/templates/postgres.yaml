@@ -1,0 +1,49 @@
+{{- if .Values.postgresqlOperator.enabled -}}
+apiVersion: acid.zalan.do/v1
+kind: postgresql
+metadata:
+  name: acid-rawdata-master
+  labels:
+    app: acid-rawdata-master
+spec:
+  allowedSourceRanges: null
+  databases:
+    rawdatamaster: rawdatamaster
+  enableLogicalBackup: {{ .Values.postgresqlOperator.enableLogicalBackup }}
+  enableShmVolume: {{ .Values.postgresqlOperator.enableShmVolume }}
+  numberOfInstances: {{ .Values.postgresqlOperator.numberOfInstances }}
+  patroni:
+    initdb:
+      encoding: UTF8
+      lc-collate: C
+      lc-ctype: C
+  postgresql:
+    version: "{{ .Values.postgresqlOperator.postgresql.version }}"
+  teamId: acid
+  users:
+    nx2:
+      - superuser
+    rawdatamaster:
+      - createdb
+  volume:
+    size: {{ .Values.postgresqlOperator.volume.size }}
+    {{- if ne .Values.postgresqlOperator.volume.storageClass "" }}
+    storageClass: {{ .Values.postgresqlOperator.volume.storageClass }}
+    {{- end }}
+  {{- if .Values.postgresqlOperator.prometheusSidecar.enabled -}}
+  sidecars:
+    - name: "exporter"
+      image: "{{ .Values.postgresqlOperator.prometheusSidecar.image.registry }}{{ .Values.postgresqlOperator.prometheusSidecar.image.repository }}"
+      ports:
+        - name: exporter
+          containerPort: {{ .Values.postgresqlOperator.prometheusSidecar.image.ports }}
+          protocol: TCP
+      resources:
+        limits:
+          cpu: 500m
+          memory: 256M
+        requests:
+          cpu: 500m
+          memory: 256M
+  {{- end }}
+{{- end }}

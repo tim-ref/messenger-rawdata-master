@@ -4,6 +4,9 @@
 
 InstanceID: CI-999001
 
+application:
+  version: "@version@"
+
 logging:
   level:
     de.akquinet: DEBUG
@@ -45,6 +48,8 @@ rawdata-master:
     productName: "TIMREF akquinet"
 
 spring:
+  main:
+    lazy-initialization: true
   datasource:
     hikari:
       connection-test-query: SELECT 1

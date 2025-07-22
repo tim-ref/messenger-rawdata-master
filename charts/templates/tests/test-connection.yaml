@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: '{{ include "rawdata-master.fullname" . }}-test-connection'
+  labels:
+    {{- include "rawdata-master.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": test
+spec:
+  containers:
+    - name: wget
+      image: busybox
+      command: ['wget']
+      args: ['{{ include "rawdata-master.fullname" . }}:{{ .Values.rawdataMaster.service.port }}', ]
+  restartPolicy: Never

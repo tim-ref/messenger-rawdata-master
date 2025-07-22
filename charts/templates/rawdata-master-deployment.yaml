@@ -1,0 +1,106 @@
+{{- $postgresHost := include "rawdata-master.postgresql.host" . }}
+{{- $postgresSecret := include "rawdata-master.postgresql.secret" . }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "rawdata-master.fullname" . }}
+  labels:
+    {{- include "rawdata-master.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "rawdata-master.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- if .Values.rollMe.enabled }}
+      annotations:
+        rollme: {{ randAlphaNum 5 | quote }}
+      {{- with .Values.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- end }}
+      labels:
+        {{- include "rawdata-master.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "rawdata-master.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.rawdataMaster.securityContext | nindent 12 }}
+          image: "{{ .Values.rawdataMaster.image.repository }}/{{ .Values.rawdataMaster.image.image }}:{{ .Values.rawdataMaster.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.rawdataMaster.image.pullPolicy }}
+          env:
+            - name: SPRING_PROFILES_ACTIVE
+              value: {{ .Values.rawdataMaster.config.springProfilesActive }}
+            - name: RAWDATA_MASTER_API_PORT
+              value: "{{ .Values.rawdataMaster.service.api.port }}"
+            - name: RAWDATA_MASTER_ADMIN_PORT
+              value: "{{ .Values.rawdataMaster.service.admin.port }}"
+            - name: RAWDATA_MASTER_REPORT_URL
+              value: "{{ .Values.rawdataMaster.config.rawDataReport.url }}"
+            - name: RAWDATA_MASTER_REPORT_DELIVERY_RATE_MINUTES
+              value: "{{ .Values.rawdataMaster.config.rawDataReport.deliveryRateMinutes }}"
+            - name: RAWDATA_MASTER_REPORT_AUTO_SUPPLEMENT_ON_START
+              value: "{{ .Values.rawdataMaster.config.rawDataReport.autoSupplementOnStart }}"
+            - name: RAWDATA_MASTER_SELF_DISCLOSURE_URL
+              value: "{{ .Values.rawdataMaster.config.selfDisclosure.url }}"
+            - name: RAWDATA_MASTER_SELF_DISCLOSURE_DELIVERY_RATE_MINUTES
+              value: "{{ .Values.rawdataMaster.config.selfDisclosure.deliveryRateMinutes }}"
+            - name: RAWDATA_MASTER_SELF_STATISTICS_URL
+              value: "{{ .Values.rawdataMaster.config.statistics.url }}"
+            - name: RAWDATA_MASTER_SELF_STATISTICS_CRON
+              value: "{{ .Values.rawdataMaster.config.statistics.cron }}"
+            - name: RAWDATA_MASTER_SELF_CLEANUP_CRON
+              value: "{{ .Values.rawdataMaster.config.cleanup.cron }}"
+            - name: RAWDATA_MASTER_SELF_CLEANUP_DAYS_TO_LIVE
+              value: "{{ .Values.rawdataMaster.config.cleanup.daysToLive }}"
+            - name: RAWDATA_MASTER_DB_HOST
+              value: "{{ $postgresHost }}"
+            - name: RAWDATA_MASTER_DB_PORT
+              value: "5432"
+            - name: RAWDATA_MASTER_DB_NAME
+              value: "rawdatamaster"
+            - name: RAWDATA_MASTER_DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: "{{ $postgresSecret }}"
+                  key: password
+            - name: RAWDATA_MASTER_DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: "{{ $postgresSecret }}"
+                  key: username
+          ports:
+            - name: apihttp
+              containerPort: 9020
+              protocol: TCP
+            - name: adminhttp
+              containerPort: 9021
+              protocol: TCP
+          {{- if .Values.rawdataMaster.livenessProbe.enabled }}
+          livenessProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: apihttp
+          {{- end }}
+          {{- if .Values.rawdataMaster.readinessProbe.enabled }}
+          readinessProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: apihttp
+          {{- end }}
+          resources:
+            {{- toYaml .Values.rawdataMaster.resources | nindent 12 }}
+      volumes:
+        - name: komp-truststore
+          secret:
+            secretName: komp-truststore
+

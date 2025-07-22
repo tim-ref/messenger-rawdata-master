@@ -10,7 +10,7 @@
 
     <groupId>de.akquinet.timref.fachdienst.rawdata-master</groupId>
     <artifactId>rdm-parent</artifactId>
-    <version>0.3.14</version>
+    <version>0.3.15</version>
     <packaging>pom</packaging>
 
     <name>Rawdata Master - Parent</name>
@@ -24,13 +24,13 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
-        <java.version>17</java.version>
+        <java.version>21</java.version>
         <maven.compiler.source>${java.version}</maven.compiler.source>
         <maven.compiler.target>${java.version}</maven.compiler.target>
 
-        <kotlin.version>1.9.22</kotlin.version>
+        <kotlin.version>1.9.23</kotlin.version>
 
-        <spring-boot.version>3.2.2</spring-boot.version>
+        <spring-boot.version>3.2.4</spring-boot.version>
 
         <spring-boot.classifier>standalone</spring-boot.classifier>
     </properties>
@@ -79,7 +79,7 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-compiler-plugin</artifactId>
-                    <version>3.12.1</version>
+                    <version>3.13.0</version>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
@@ -104,7 +104,7 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-assembly-plugin</artifactId>
-                    <version>3.6.0</version>
+                    <version>3.7.1</version>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
@@ -121,6 +121,8 @@
                 <artifactId>maven-release-plugin</artifactId>
                 <configuration>
                     <releaseProfiles>release</releaseProfiles>
+                    <!-- It is assumed that the CI executes a test job which must succeed prior to the release plugin invocation -->
+                    <arguments>-DskipTests=true</arguments>
                 </configuration>
             </plugin>
         </plugins>
@@ -200,7 +202,7 @@
     <scm>
         <connection>${env.CI_SCM_CONNECTION}</connection>
         <developerConnection>${env.CI_SCM_DEVELOPER_CONNECTION}</developerConnection>
-        <tag>0.3.14</tag>
+        <tag>0.3.15</tag>
         <url>${env.CI_SCM_URL}</url>
     </scm>
 

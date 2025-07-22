@@ -1,0 +1,36 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "rawdata-master.fullname" . }}
+  labels:
+    {{- include "rawdata-master.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.rawdataMaster.service.type }}
+  ports:
+    - port: {{ .Values.rawdataMaster.service.api.port }}
+      targetPort: apihttp
+      protocol: TCP
+      name: apihttp
+    - port: {{ .Values.rawdataMaster.service.admin.port }}
+      targetPort: adminhttp
+      protocol: TCP
+      name: adminhttp
+  selector:
+    {{- include "rawdata-master.selectorLabels" . | nindent 4 }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "rawdata-master.upload-mock.fullname" . }}
+  labels:
+    {{- include "rawdata-master.upload-mock.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.uploadMock.service.type }}
+  ports:
+    - port: {{ .Values.uploadMock.service.api.port }}
+      targetPort: api
+      protocol: TCP
+      name: api
+
+  selector:
+    {{- include "rawdata-master.upload-mock.selectorLabels" . | nindent 4 }}

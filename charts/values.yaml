@@ -1,0 +1,215 @@
+# Default values for rawdata-master.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+replicaCount: 1
+
+rawdataMaster:
+  image:
+    repository: registry-spree.au.timref.akquinet.nx2.dev
+    image: akquinet/health/timref/rawdata-master/rdm-backend
+    pullPolicy: IfNotPresent
+    # Overrides the image tag whose default is the chart appVersion.
+    tag: ""
+  config:
+    springProfilesActive: kubernetes
+    rawDataReport:
+      url:
+      deliveryRateMinutes: 5
+      autoSupplementOnStart: true # detect and send any failed/missing reports on service start (Nachlieferungen)
+    selfDisclosure:
+      url:
+      deliveryRateMinutes: 10
+    statistics:
+      url:
+      cron: "0 0 0 1 * *" # smhDMW, at midnight on the first day of every month
+    cleanup:
+      cron: "0 0 2 * * *"
+      daysToLive: 90
+
+  service:
+    type: ClusterIP
+    api:
+      port: 9020
+    info:
+      port: 9020
+    admin:
+      port: 9021
+
+  securityContext:
+    readOnlyRootFilesystem: false
+    runAsNonRoot: true
+    capabilities:
+      drop:
+        - ALL
+    runAsUser: 65534
+
+  ingress:
+    fqdn: eu.timref.akquinet.nx2.dev
+    api:
+      enabled: true
+      className: "nginx-internal"
+      annotations:
+        cert-manager.io/cluster-issuer: letsencrypt-prod
+        kubernetes.io/tls-acme: "true"
+      hosts:
+        - host: rawdatamaster-api
+          paths:
+            - path: /
+              pathType: ImplementationSpecific
+      tls:
+        - secretName: tls-rawdatamaster-api-general
+          hosts:
+            - rawdatamaster-api
+    info:
+      enabled: true
+      className: "nginx-external"
+      annotations:
+        cert-manager.io/cluster-issuer: letsencrypt-prod
+        kubernetes.io/tls-acme: "true"
+      hosts:
+        - host: rawdatamaster-info
+          paths:
+            - path: /self-disclosure
+              pathType: ImplementationSpecific
+      tls:
+        - secretName: tls-rawdatamaster-info-general
+          hosts:
+            - rawdatamaster-info
+    admin:
+      enabled: true
+      className: "nginx-internal"
+      annotations:
+        cert-manager.io/cluster-issuer: letsencrypt-prod
+        kubernetes.io/tls-acme: "true"
+      hosts:
+        - host: rawdatamaster-admin
+          paths:
+            - path: /
+              pathType: ImplementationSpecific
+      tls:
+        - secretName: tls-rawdatamaster-admin-general
+          hosts:
+            - rawdatamaster-admin
+
+  networkPolicies:
+    enabled: true
+    controllerIPs: []
+    s3Endpint: "5.183.72.134/32" #s3-de.hse365.de
+
+  resources:
+    limits:
+      cpu: 250m
+      memory: 1024Mi
+    requests:
+      cpu: 250m
+      memory: 1024Mi
+
+  livenessProbe:
+    enabled: false
+  readinessProbe:
+    enabled: false
+
+uploadMock:
+  config:
+    springProfilesActive: kubernetes
+
+  image:
+    repository: registry-spree.au.timref.akquinet.nx2.dev
+    image: akquinet/health/timref/rawdata-master/rdm-upload-mock
+    pullPolicy: IfNotPresent
+    # Overrides the image tag whose default is the chart appVersion.
+    tag: latest
+
+  service:
+    type: ClusterIP
+    api:
+      port: 8191
+    health:
+      port: 8192
+
+  securityContext:
+    readOnlyRootFilesystem: false
+    runAsNonRoot: true
+    capabilities:
+      drop:
+        - ALL
+    runAsUser: 65534
+
+  resources:
+    limits:
+      cpu: 125m
+      memory: 512Mi
+    requests:
+      cpu: 125m
+      memory: 512Mi
+
+  livenessProbe:
+    enabled: false
+  readinessProbe:
+    enabled: false
+
+rollMe:
+  enabled: false
+
+###############################
+## Zalando Postgres-Operator ##
+###############################
+postgresqlOperator:
+  enabled: true
+  enableLogicalBackup: true
+  enableShmVolume: true
+  numberOfInstances: 1
+  postgresql:
+    version: "15"
+  volume:
+    size: 10Gi
+    storageClass: ""
+  prometheusSidecar:
+    enable: false
+    image:
+      registry: registry-quay.au.timref.akquinet.nx2.dev
+      repository: prometheuscommunity/postgres-exporter
+    ports: 9187
+  operatorNamespace: postgres-operator
+
+#################################
+## CloudNativePG Configuration ##
+#################################
+cloudnativePG:
+  enabled: false
+  logLevel: info
+  backup:
+    enabled: false
+    destinationPath: "s3://timref-eu-rawdata-db/"
+  walStorageEnabled: false
+  walStorage:
+    storageClass: ""
+    resizeInUseVolumes: true
+    size: 5Gi
+  storage:
+    storageClass: ""
+    resizeInUseVolumes: true
+    size: 10Gi
+  instances: "3"
+
+
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: true
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""
+
+podSecurityContext: {}
+  # fsGroup: 2000
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+podAnnotations: {}
+nodeSelector: {}
+tolerations: []
+affinity: {}

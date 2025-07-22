@@ -1,0 +1,19 @@
+{{- if .Values.postgresqlOperator.prometheusSidecar.enabled }}
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: acid-rawdata-master
+  labels:
+    app: acid-rawdata-master
+    statefulset.kubernetes.io/pod-name: acid-rawdata-master-0
+spec:
+  endpoints:
+    - port: exporter
+      interval: 15s
+      scrapeTimeout: 10s
+  selector:
+    matchLabels:
+      app: acid-rawdata-master
+      statefulset.kubernetes.io/pod-name: acid-rawdata-master-0
+{{- end }}

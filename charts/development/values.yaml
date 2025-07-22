@@ -1,0 +1,5 @@
+postgresqlOperator:
+  enabled: false
+
+cloudnativePG:
+  enabled: true

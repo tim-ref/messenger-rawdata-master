@@ -11,12 +11,12 @@
     <parent>
         <groupId>de.akquinet.timref.fachdienst.rawdata-master</groupId>
         <artifactId>rdm-parent</artifactId>
-        <version>0.3.14</version>
+        <version>0.3.15</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
     <artifactId>rdm-upload-mock</artifactId>
-    <version>0.3.14</version>
+    <version>0.3.15</version>
     <name>Rawdata Master - Upload Mock</name>
     <description>Upload Mock für den Rawdata Master der TIM-Referenzimplementierung</description>
 
@@ -24,6 +24,16 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.springframework.boot</groupId>
+                    <artifactId>spring-boot-starter-tomcat</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-undertow</artifactId>
         </dependency>
 
         <dependency>
@@ -33,6 +43,12 @@
     </dependencies>
 
     <build>
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>true</filtering>
+            </resource>
+        </resources>
         <plugins>
 
             <plugin>

@@ -1,0 +1,73 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: '{{ include "rawdata-master.upload-mock.fullname" . }}'
+  labels:
+    {{- include "rawdata-master.upload-mock.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "rawdata-master.upload-mock.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- if .Values.rollMe.enabled }}
+      annotations:
+        rollme: {{ randAlphaNum 5 | quote }}
+      {{- with .Values.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- end }}
+      labels:
+        {{- include "rawdata-master.upload-mock.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "rawdata-master.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}-upload-mock
+          securityContext:
+            {{- toYaml .Values.uploadMock.securityContext | nindent 12 }}
+          image: "{{ .Values.uploadMock.image.repository }}/{{ .Values.uploadMock.image.image }}:{{ .Values.uploadMock.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.uploadMock.image.pullPolicy }}
+          env:
+            - name: SPRING_PROFILES_ACTIVE
+              value: "{{ .Values.uploadMock.config.springProfilesActive }}"
+          ports:
+            - name: api
+              containerPort: 8191
+              protocol: TCP
+            - name: health
+              containerPort: 8192
+              protocol: TCP
+          {{- if .Values.uploadMock.livenessProbe.enabled }}
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: health
+          {{- end }}
+          {{- if .Values.uploadMock.readinessProbe.enabled }}
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: health
+          {{- end }}
+          resources:
+            {{- toYaml .Values.uploadMock.resources | nindent 12 }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+

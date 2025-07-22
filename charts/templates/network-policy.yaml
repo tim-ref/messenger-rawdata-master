@@ -1,0 +1,238 @@
+{{- if .Values.rawdataMaster.networkPolicies.enabled -}}
+{{- $fullName := include "rawdata-master.fullname" . -}}
+{{- $selectorLabels := include "rawdata-master.selectorLabels" . }}
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ $fullName }}-default
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+    - Egress
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+          podSelector:
+            matchLabels:
+              k8s-app: kube-dns
+      ports:
+        - port: 53
+          protocol: TCP
+        - port: 53
+          protocol: UDP
+---
+kind: NetworkPolicy
+apiVersion: networking.k8s.io/v1
+metadata:
+  name: {{ $fullName }}
+spec:
+  podSelector:
+    matchLabels:
+      {{- $selectorLabels | nindent 6 }}
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: {{ .Release.Namespace }}
+          podSelector: {}
+        - namespaceSelector:
+            matchLabels:
+              timref: "true"
+              app.kubernetes.io/managed-by: synapse-operator-api
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/name: messengerproxy
+              app.kubernetes.io/component: proxy
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: registration-service
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: synapse-operator
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: synapse-operator-api
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: org-admin-client
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: messenger-client
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: fachdienst-meta
+      ports:
+        - protocol: TCP
+          port: {{ .Values.rawdataMaster.service.api.port }}
+    - from:
+        - ipBlock:
+            cidr: 10.0.0.0/8
+        - ipBlock:
+            cidr: 172.16.0.0/12
+        - ipBlock:
+            cidr: 192.168.0.0/16
+  egress:
+    - to:
+      - ipBlock:
+          cidr: 0.0.0.0/0
+          except:
+            - 10.0.0.0/8
+            - 172.16.0.0/12
+            - 192.168.0.0/16
+      ports:
+        - protocol: TCP
+          port: 443
+    - to:
+      - podSelector:
+          matchLabels:
+            application: spilo
+            cluster-name: acid-rawdata-master
+            team: acid
+      ports:
+        - protocol: TCP
+          port: 5432
+    - to:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/instance: rawdata-master
+              app.kubernetes.io/name: rawdata-master-upload-mock
+      ports:
+        - protocol: TCP
+          port: {{ .Values.uploadMock.service.api.port }}
+---
+kind: NetworkPolicy
+apiVersion: networking.k8s.io/v1
+metadata:
+  name: {{ $fullName }}-postgres
+spec:
+  podSelector:
+    matchLabels:
+      application: spilo
+      cluster-name: acid-rawdata-master
+      team: acid
+  egress:
+    - to:
+      - podSelector:
+          matchLabels:
+            {{- $selectorLabels | nindent 12 }}
+    {{- range $.Values.rawdataMaster.networkPolicies.controllerIPs }}
+    - to:
+      - ipBlock:
+          cidr: {{ . }}
+    {{- end }}
+    {{- if ne .Values.rawdataMaster.networkPolicies.s3Endpint "" }}
+    - to:
+      - ipBlock:
+          cidr: {{ .Values.rawdataMaster.networkPolicies.s3Endpint }}
+    {{- end }}
+    {{- if eq .Values.postgresqlOperator.enableLogicalBackup true }}
+    - to:
+      {{- if eq .Values.postgresqlOperator.enableLogicalBackup true }}
+      - podSelector:
+          matchLabels:
+            application: spilo-logical-backup
+            cluster-name: acid-rawdata-master
+      {{- end }}
+      - podSelector:
+          matchLabels:
+            application: spilo
+            cluster-name: acid-rawdata-master
+    {{- end }}
+  ingress:
+    - from:
+      - podSelector:
+          matchLabels:
+            application: spilo
+            cluster-name: acid-rawdata-master
+    - from:
+      - podSelector:
+          matchLabels:
+            {{ $selectorLabels | nindent 12 }}
+      ports:
+        - protocol: TCP
+          port: 5432
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: {{ .Values.postgresqlOperator.operatorNamespace }}
+        {{- if eq .Values.postgresqlOperator.enableLogicalBackup true }}
+        - podSelector:
+            matchLabels:
+              application: spilo-logical-backup
+              cluster-name: acid-rawdata-master
+        {{- end }}
+      ports:
+        - port: 8008
+          protocol: TCP
+        - port: 5432
+          protocol: TCP
+{{- if eq .Values.postgresqlOperator.enableLogicalBackup true }}
+---
+kind: NetworkPolicy
+apiVersion: networking.k8s.io/v1
+metadata:
+  name: {{ $fullName }}-postgresbackup
+spec:
+  podSelector:
+    matchLabels:
+      application: spilo-logical-backup
+      cluster-name: acid-rawdata-master
+  egress:
+    {{- range $.Values.rawdataMaster.networkPolicies.controllerIPs }}
+    - to:
+      - ipBlock:
+          cidr: {{ . }}
+    {{- end }}
+    - to:
+      - ipBlock:
+          cidr: {{ .Values.rawdataMaster.networkPolicies.s3Endpint }}
+    - to:
+      - podSelector:
+          matchLabels:
+            application: spilo
+            cluster-name: acid-rawdata-master
+            team: acid
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: {{ .Values.postgresqlOperator.operatorNamespace }}
+        - podSelector:
+            matchLabels:
+              application: spilo
+              cluster-name: acid-rawdata-master
+              team: acid
+        - podSelector:
+            matchLabels:
+              {{ $selectorLabels | nindent 14 }}
+      ports:
+        - protocol: TCP
+          port: 5432
+{{- end }}
+---
+kind: NetworkPolicy
+apiVersion: networking.k8s.io/v1
+metadata:
+  name: {{ $fullName }}-upload-mock
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/instance: rawdata-master
+      app.kubernetes.io/name: rawdata-master-upload-mock
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/instance: rawdata-master
+              app.kubernetes.io/name: rawdata-master
+      ports:
+        - protocol: TCP
+          port: {{ .Values.uploadMock.service.api.port }}
+{{- end }}

@@ -1,0 +1,23 @@
+rawdataMaster:
+  ingress:
+    fqdn: rawdatamaster.kind.local
+    api:
+      enabled: true
+      className: "nginx"
+    admin:
+      enabled: true
+      className: "nginx"
+
+externalPostgres:
+  enabled: true
+  dbUsername: "rawdatamaster"
+  dbPassword: "kfHEjA11kvoL2Ac0W1GdZZR7zNBfZbWkW8p8oKCuxmLTP9jPUSZKfxZVxPj0p2lR"
+  dbExternalSecret: ""
+  dbDatabase: "rawdatamaster"
+  dbHost: "acid-rawdata-master.postgres-operator.svc.cluster.local"
+  dbPort: "5432"
+
+
+
+postgresqlOperator:
+  enabled: false
